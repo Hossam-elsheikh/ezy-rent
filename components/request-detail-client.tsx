@@ -2,7 +2,7 @@
 
 import { useLanguage } from "@/context/language-context";
 import { Navbar } from "@/components/navbar";
-import { formatPrice, formatDate, getImageUrl } from "@/lib/helpers";
+import { formatPrice, formatDate, getImageUrl, getCountryName, getCountryCurrency } from "@/lib/helpers";
 import { UserProfile } from "@/lib/types";
 import Link from "next/link";
 import Image from "next/image";
@@ -16,7 +16,7 @@ interface RequestDetailClientProps {
 }
 
 export function RequestDetailClient({ user, req, id }: RequestDetailClientProps) {
-    const { t, isRTL } = useLanguage();
+    const { t, isRTL, language } = useLanguage();
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const imageUrl = getImageUrl(supabaseUrl, req.image_path);
     const requester = req.requester as Record<string, string> | null;
@@ -68,7 +68,7 @@ export function RequestDetailClient({ user, req, id }: RequestDetailClientProps)
                             <div className={`grid grid-cols-2 gap-4 text-sm mb-4 ${isRTL ? 'direction-rtl' : ''}`}>
                                 <div className={`flex items-center gap-2 text-gray-600 dark:text-gray-400 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                     <DollarSign size={14} className="text-teal-500" />
-                                    <span>{formatPrice(req.price)}/{t.unit.per_month} {req.negotiable && <span className="text-indigo-500">({t.unit.negotiable})</span>}</span>
+                                    <span>{formatPrice(req.price, language, req.currency || getCountryCurrency(req.country))}/{t.unit.per_month} {req.negotiable && <span className="text-indigo-500">({t.unit.negotiable})</span>}</span>
                                 </div>
                                 <div className={`flex items-center gap-2 text-gray-600 dark:text-gray-400 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                     <Users size={14} className="text-teal-500" />
@@ -76,7 +76,7 @@ export function RequestDetailClient({ user, req, id }: RequestDetailClientProps)
                                 </div>
                                 <div className={`flex items-center gap-2 text-gray-600 dark:text-gray-400 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                     <MapPin size={14} className="text-teal-500" />
-                                    <span>{[req.district, req.city, req.country].filter(Boolean).join(", ")}</span>
+                                    <span>{[req.district, req.city, getCountryName(req.country, language)].filter(Boolean).join(", ")}</span>
                                 </div>
                                 {req.available_at && (
                                     <div className={`flex items-center gap-2 text-gray-600 dark:text-gray-400 ${isRTL ? 'flex-row-reverse' : ''}`}>

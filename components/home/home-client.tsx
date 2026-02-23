@@ -131,7 +131,7 @@ export function HomeClient({ user, featuredUnits, totalUnits, totalCountries, fa
 
             {/* CTA Section */}
             <section className="bg-gradient-to-r from-teal-600 to-indigo-600 py-16 mb-0">
-                <div className={`max-w-4xl mx-auto px-4 text-center text-white ${isRTL ? 'text-right' : ''}`}>
+                <div className={`max-w-4xl mx-auto px-4 text-center text-white flex flex-col items-center justify-center ${isRTL ? 'text-right' : ''}`}>
                     <h2 className="text-3xl font-bold mb-4">{t.home.cta_title}</h2>
                     <p className="text-white/80 mb-8 text-lg">
                         {t.home.cta_desc}

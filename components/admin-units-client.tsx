@@ -2,7 +2,7 @@
 
 import { useLanguage } from "@/context/language-context";
 import { Navbar } from "@/components/navbar";
-import { formatPrice, formatDate } from "@/lib/helpers";
+import { formatPrice, formatDate, getCountryName } from "@/lib/helpers";
 import { UserProfile } from "@/lib/types";
 import Link from "next/link";
 import { Building2, PlusCircle, Pencil, Trash2, Eye } from "lucide-react";
@@ -14,7 +14,7 @@ interface AdminUnitsClientProps {
 }
 
 export function AdminUnitsClient({ user, units }: AdminUnitsClientProps) {
-    const { t, isRTL } = useLanguage();
+    const { t, isRTL, language } = useLanguage();
 
     const statusBadge: Record<string, string> = {
         pending: "badge-pending",
@@ -59,7 +59,7 @@ export function AdminUnitsClient({ user, units }: AdminUnitsClientProps) {
                                             <p className={`text-xs text-gray-400 mt-0.5 ${isRTL ? 'text-right' : ''}`}>{unit.persons} {t.unit.persons}</p>
                                         </td>
                                         <td className={`px-5 py-4 text-gray-600 dark:text-gray-400 ${isRTL ? 'text-right' : ''}`}>
-                                            {[unit.city, unit.country].filter(Boolean).join(", ")}
+                                            {[unit.city, getCountryName(unit.country, language)].filter(Boolean).join(", ")}
                                         </td>
                                         <td className={`px-5 py-4 font-medium text-gray-900 dark:text-white ${isRTL ? 'text-right' : ''}`}>
                                             {formatPrice(unit.price)}

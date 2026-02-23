@@ -2,7 +2,7 @@
 
 import { useLanguage } from "@/context/language-context";
 import { Navbar } from "@/components/navbar";
-import { formatPrice, formatDate } from "@/lib/helpers";
+import { formatPrice, formatDate, getCountryName, getCountryCurrency } from "@/lib/helpers";
 import { UserProfile } from "@/lib/types";
 import Link from "next/link";
 import { PlusCircle, Clock, CheckCircle, XCircle } from "lucide-react";
@@ -13,7 +13,7 @@ interface MyRequestsClientProps {
 }
 
 export function MyRequestsClient({ user, requests }: MyRequestsClientProps) {
-    const { t, isRTL } = useLanguage();
+    const { t, isRTL, language } = useLanguage();
 
     const statusBadge = {
         pending: "badge-pending",
@@ -51,7 +51,7 @@ export function MyRequestsClient({ user, requests }: MyRequestsClientProps) {
                                             </span>
                                         </div>
                                         <p className={`text-sm text-gray-500 dark:text-gray-400 ${isRTL ? 'text-right' : ''}`}>
-                                            {[req.district, req.city, req.country].filter(Boolean).join(", ")} · {formatPrice(req.price)}/{t.unit.per_month}
+                                            {[req.district, req.city, getCountryName(req.country, language)].filter(Boolean).join(", ")} · {formatPrice(req.price, language, req.currency || getCountryCurrency(req.country))}/{t.unit.per_month}
                                         </p>
                                         {req.admin_note && (
                                             <div className={`mt-2 text-xs px-3 py-2 rounded-lg ${req.status === "rejected"

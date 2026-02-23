@@ -2,7 +2,7 @@
 
 import { useLanguage } from "@/context/language-context";
 import { Navbar } from "@/components/navbar";
-import { formatPrice, formatDate, getImageUrl } from "@/lib/helpers";
+import { formatPrice, formatDate, getImageUrl, getCountryName, getCountryCurrency } from "@/lib/helpers";
 import { Unit, UserProfile } from "@/lib/types";
 import Image from "next/image";
 import Link from "next/link";
@@ -52,7 +52,7 @@ export function UnitDetailClient({ user, unit, id }: UnitDetailClientProps) {
                 {/* Back */}
                 <Link
                     href="/units"
-                    className={`inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}
+                    className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors mb-6"
                 >
                     <ArrowLeft size={16} className={isRTL ? "rotate-180" : ""} /> {t.unit.back_to_units}
                 </Link>
@@ -76,7 +76,7 @@ export function UnitDetailClient({ user, unit, id }: UnitDetailClientProps) {
                             )}
 
                             {/* Status badges */}
-                            <div className={`absolute top-4 ${isRTL ? 'right-4' : 'left-4'} flex gap-2`}>
+                            <div className="absolute top-4 start-4 flex gap-2">
                                 {typedUnit.available ? (
                                     <span className="badge-approved flex items-center gap-1">
                                         <BadgeCheck size={12} /> {t.unit.available}
@@ -93,19 +93,19 @@ export function UnitDetailClient({ user, unit, id }: UnitDetailClientProps) {
                         </div>
 
                         {/* Title & Price */}
-                        <div className={`bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 ${isRTL ? 'text-right' : ''}`}>
-                            <div className={`flex items-start justify-between gap-4 mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800">
+                            <div className="flex items-start justify-between gap-4 mb-4">
                                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{typedUnit.title}</h1>
-                                <div className={`${isRTL ? 'text-left' : 'text-right'} shrink-0`}>
-                                    <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">{formatPrice(typedUnit.price, language)}</p>
+                                <div className="text-end shrink-0">
+                                    <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">{formatPrice(typedUnit.price, language, typedUnit.currency || getCountryCurrency(typedUnit.country))}</p>
                                     <p className="text-xs text-gray-400">{t.unit.per_month}</p>
                                 </div>
                             </div>
 
-                            <div className={`flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
                                 <span className="flex items-center gap-1.5">
                                     <MapPin size={14} className="text-teal-500" />
-                                    {[typedUnit.district, typedUnit.city, typedUnit.country].filter(Boolean).join(", ")}
+                                    {[typedUnit.district, typedUnit.city, getCountryName(typedUnit.country, language)].filter(Boolean).join(", ")}
                                 </span>
                                 <span className="flex items-center gap-1.5">
                                     <Users size={14} className="text-teal-500" />
@@ -157,27 +157,41 @@ export function UnitDetailClient({ user, unit, id }: UnitDetailClientProps) {
 
                         {/* Price breakdown */}
                         <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
-                            <h3 className={`font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : ''}`}>{t.unit.price_details}</h3>
+                            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">{t.unit.price_details}</h3>
                             <div className="space-y-3 text-sm">
-                                <div className={`flex justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                <div className="flex justify-between">
                                     <span className="text-gray-500 dark:text-gray-400">{t.unit.monthly_rent}</span>
-                                    <span className="font-semibold text-gray-900 dark:text-white">{formatPrice(typedUnit.price, language)}</span>
+                                    <span className="font-semibold text-gray-900 dark:text-white">{formatPrice(typedUnit.price, language, typedUnit.currency || getCountryCurrency(typedUnit.country))}</span>
                                 </div>
-                                <div className={`flex justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                <div className="flex justify-between">
                                     <span className="text-gray-500 dark:text-gray-400">{t.unit.negotiable}</span>
                                     <span className={`font-medium ${typedUnit.negotiable ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500"}`}>
                                         {typedUnit.negotiable ? t.unit.yes : t.unit.no}
                                     </span>
                                 </div>
-                                <div className={`border-t border-gray-100 dark:border-gray-800 pt-3 flex justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                <div className="border-t border-gray-100 dark:border-gray-800 pt-3 flex justify-between">
                                     <span className="text-gray-500 dark:text-gray-400">{t.unit.annual}</span>
-                                    <span className="font-bold text-gray-900 dark:text-white">{formatPrice(typedUnit.price * 12, language)}</span>
+                                    <span className="font-bold text-gray-900 dark:text-white">{formatPrice(typedUnit.price * 12, language, typedUnit.currency || getCountryCurrency(typedUnit.country))}</span>
                                 </div>
                             </div>
+                            {/* call owner */}
+                            <a
+                                href={`tel:${typedUnit.owner.phone}`}
+                                className="btn-primary w-full text-center text-sm block my-4"
+                            >
+                                {t.unit.contact_owner}
+                            </a>
+                            {/* send whatsapp */}
+                            <a
+                                href={`https://wa.me/${typedUnit.owner.phone}`}
+                                className="btn-primary w-full text-center text-sm block my-4"
+                            >
+                                {t.unit.contact_owner_whatsapp}
+                            </a>
                         </div>
 
                         {/* Owner info */}
-                        {typedUnit.owner && (
+                        {/* {typedUnit.owner && (
                             <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
                                 <h3 className={`font-semibold text-gray-900 dark:text-white mb-4 ${isRTL ? 'text-right' : ''}`}>{t.unit.listed_by}</h3>
                                 <div className={`flex items-center gap-3 mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -198,16 +212,16 @@ export function UnitDetailClient({ user, unit, id }: UnitDetailClientProps) {
                                     </a>
                                 )}
                             </div>
-                        )}
+                        )} */}
 
                         {/* Location */}
                         <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
-                            <h3 className={`font-semibold text-gray-900 dark:text-white mb-3 ${isRTL ? 'text-right' : ''}`}>{t.unit.location}</h3>
-                            <div className={`space-y-2 text-sm text-gray-600 dark:text-gray-400 ${isRTL ? 'text-right' : ''}`}>
+                            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">{t.unit.location}</h3>
+                            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                                 {typedUnit.address && <p>{typedUnit.address}</p>}
                                 {typedUnit.district && <p>{t.unit.district}: {typedUnit.district}</p>}
                                 <p>{isRTL ? "المدينة" : "City"}: {typedUnit.city}</p>
-                                <p>{isRTL ? "الدولة" : "Country"}: {typedUnit.country}</p>
+                                <p>{isRTL ? "الدولة" : "Country"}: {getCountryName(typedUnit.country, language)}</p>
                             </div>
                         </div>
                     </div>

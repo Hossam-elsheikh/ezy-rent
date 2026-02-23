@@ -4,6 +4,8 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { useLanguage } from "@/context/language-context";
+import Swal from "sweetalert2";
 
 interface RequestReviewActionsProps {
     requestId: string;
@@ -13,10 +15,17 @@ export function RequestReviewActions({ requestId }: RequestReviewActionsProps) {
     const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
     const [adminNote, setAdminNote] = useState("");
     const router = useRouter();
+    const { t } = useLanguage();
 
     const handleAction = async (action: "approve" | "reject") => {
         if (action === "reject" && !adminNote.trim()) {
-            alert("Please provide a note explaining the rejection.");
+            await Swal.fire({
+                title: t.admin.alerts.review_note_title,
+                text: t.admin.alerts.review_note_desc,
+                icon: "warning",
+                confirmButtonColor: "#f59e0b",
+                confirmButtonText: t.admin.alerts.ok
+            });
             return;
         }
         setLoading(action);

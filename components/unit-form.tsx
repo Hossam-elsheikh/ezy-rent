@@ -3,9 +3,15 @@
 import { useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { Upload, X, Loader2, MapPin } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
 import { Country, City } from "country-state-city";
+import isoCountries from "i18n-iso-countries";
+import enLocale from "i18n-iso-countries/langs/en.json";
+import arLocale from "i18n-iso-countries/langs/ar.json";
 import { useLanguage } from "@/context/language-context";
+
+isoCountries.registerLocale(enLocale);
+isoCountries.registerLocale(arLocale);
 
 interface UnitFormProps {
     mode: "create" | "edit";
@@ -18,19 +24,20 @@ interface UnitFormProps {
         persons: number;
         price: number;
         negotiable: boolean;
-        country: string;
+        country: string;  // ISO code, e.g. "EG"
         city: string;
         district: string;
         address: string;
+        currency: string;
         available: boolean;
         available_at: string;
     }>;
     onSuccess?: () => void;
-    isRequest?: boolean; // if true, submits to unit_requests table
+    isRequest?: boolean;
 }
 
 export function UnitForm({ mode, initialData, onSuccess, isRequest = false }: UnitFormProps) {
-    const { t, isRTL } = useLanguage();
+    const { t, isRTL, language } = useLanguage();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -44,24 +51,41 @@ export function UnitForm({ mode, initialData, onSuccess, isRequest = false }: Un
         persons: initialData?.persons || 1,
         price: initialData?.price || 0,
         negotiable: initialData?.negotiable || false,
-        country: initialData?.country || "",
+        country: initialData?.country || "",   // ISO code
         city: initialData?.city || "",
         district: initialData?.district || "",
         address: initialData?.address || "",
+        currency: initialData?.currency || "",
         available: initialData?.available !== undefined ? initialData.available : true,
         available_at: initialData?.available_at || "",
     });
 
-    const countries = useMemo(() => Country.getAllCountries(), []);
-
-    const selectedCountryCode = useMemo(() => {
-        return countries.find(c => c.name === form.country)?.isoCode;
-    }, [form.country, countries]);
+    // All countries sorted by localized name
+    const allCountries = useMemo(() => {
+        const rawList = Country.getAllCountries();
+        return rawList
+            .map((c) => ({
+                isoCode: c.isoCode,
+                currency: c.currency,
+                displayName: isoCountries.getName(c.isoCode, language) || c.name,
+            }))
+            .sort((a, b) => a.displayName.localeCompare(b.displayName, language === "ar" ? "ar" : "en"));
+    }, [language]);
 
     const cities = useMemo(() => {
-        if (!selectedCountryCode) return [];
-        return City.getCitiesOfCountry(selectedCountryCode) || [];
-    }, [selectedCountryCode]);
+        if (!form.country) return [];
+        return City.getCitiesOfCountry(form.country) || [];
+    }, [form.country]);
+
+    const handleCountryChange = (isoCode: string) => {
+        const countryData = Country.getCountryByCode(isoCode);
+        setForm((prev) => ({
+            ...prev,
+            country: isoCode,
+            city: "",
+            currency: countryData?.currency || "",
+        }));
+    };
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -82,7 +106,6 @@ export function UnitForm({ mode, initialData, onSuccess, isRequest = false }: Un
 
             let image_path = initialData?.image_path || null;
 
-            // Upload image if selected
             if (imageFile) {
                 const ext = imageFile.name.split(".").pop();
                 const fileName = `${user.id}/${Date.now()}.${ext}`;
@@ -94,7 +117,6 @@ export function UnitForm({ mode, initialData, onSuccess, isRequest = false }: Un
             }
 
             if (isRequest) {
-                // Submit as a unit request - remove 'available' as it's not in unit_requests table
                 const { available, ...requestForm } = form;
                 const { error: reqError } = await supabase
                     .from("unit_requests")
@@ -104,7 +126,7 @@ export function UnitForm({ mode, initialData, onSuccess, isRequest = false }: Un
                         persons: Number(form.persons),
                         price: Number(form.price),
                         available_at: form.available_at || null,
-                        requester_id: user.id
+                        requester_id: user.id,
                     });
                 if (reqError) throw reqError;
             } else if (mode === "create") {
@@ -117,7 +139,7 @@ export function UnitForm({ mode, initialData, onSuccess, isRequest = false }: Un
                         price: Number(form.price),
                         available_at: form.available_at || null,
                         owner_id: user.id,
-                        status: "approved"
+                        status: "approved",
                     });
                 if (insertError) throw insertError;
             } else {
@@ -168,7 +190,7 @@ export function UnitForm({ mode, initialData, onSuccess, isRequest = false }: Un
                             <button
                                 type="button"
                                 onClick={() => { setImageFile(null); setImagePreview(null); }}
-                                className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} w-7 h-7 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors`}
+                                className={`absolute top-2 ${isRTL ? "left-2" : "right-2"} w-7 h-7 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors`}
                             >
                                 <X size={14} />
                             </button>
@@ -220,11 +242,74 @@ export function UnitForm({ mode, initialData, onSuccess, isRequest = false }: Un
                     className="input-field"
                 />
             </div>
+            {/* Location */}
+            <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2">{t.unit.location}</h3>
+                <div className="grid grid-cols-2 gap-4">
+                    {/* Country */}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{t.home.stats_countries} *</label>
+                        <select
+                            required
+                            value={form.country}
+                            onChange={(e) => handleCountryChange(e.target.value)}
+                            className="input-field"
+                        >
+                            <option value="">{isRTL ? "اختر الدولة" : "Select Country"}</option>
+                            {allCountries.map((c) => (
+                                <option key={c.isoCode} value={c.isoCode}>
+                                    {c.displayName}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-            {/* Price & Persons */}
-            <div className="grid grid-cols-2 gap-4">
+                    {/* City */}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{isRTL ? "المدينة" : "City"} *</label>
+                        <select
+                            required
+                            disabled={!form.country}
+                            value={form.city}
+                            onChange={(e) => setForm({ ...form, city: e.target.value })}
+                            className="input-field disabled:opacity-50"
+                        >
+                            <option value="">{isRTL ? "اختر المدينة" : "Select City"}</option>
+                            {cities.map((c) => (
+                                <option key={c.name} value={c.name}>{c.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* District */}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{t.unit.district}</label>
+                        <input
+                            type="text"
+                            value={form.district}
+                            onChange={(e) => setForm({ ...form, district: e.target.value })}
+                            placeholder={isRTL ? "مثال: المعادي" : "e.g. Maadi"}
+                            className="input-field"
+                        />
+                    </div>
+
+                    {/* Address */}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{t.unit.address}</label>
+                        <input
+                            type="text"
+                            value={form.address}
+                            onChange={(e) => setForm({ ...form, address: e.target.value })}
+                            placeholder={isRTL ? "عنوان الشارع" : "Street address"}
+                            className="input-field"
+                        />
+                    </div>
+                </div>
+            </div>
+            {/* Price, Currency & Persons */}
+            <div className="grid grid-cols-3 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t.unit.price} ($) *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t.unit.price} *</label>
                     <input
                         type="number"
                         required
@@ -234,6 +319,22 @@ export function UnitForm({ mode, initialData, onSuccess, isRequest = false }: Un
                         onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
                         className="input-field"
                     />
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        {isRTL ? "العملة" : "Currency"}
+                    </label>
+                    <input
+                        type="text"
+                        value={form.currency}
+                        onChange={(e) => setForm({ ...form, currency: e.target.value.toUpperCase() })}
+                        placeholder="USD"
+                        maxLength={3}
+                        className="input-field font-mono tracking-wider uppercase"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                        {isRTL ? "تُملأ تلقائياً عند اختيار الدولة" : "Auto-filled when country is selected"}
+                    </p>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t.unit.persons} *</label>
@@ -283,61 +384,7 @@ export function UnitForm({ mode, initialData, onSuccess, isRequest = false }: Un
                 />
             </div>
 
-            {/* Location */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2">{t.unit.location}</h3>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{t.home.stats_countries} *</label>
-                        <select
-                            required
-                            value={form.country}
-                            onChange={(e) => setForm({ ...form, country: e.target.value, city: "" })}
-                            className="input-field"
-                        >
-                            <option value="">{isRTL ? "اختر الدولة" : "Select Country"}</option>
-                            {countries.map((c) => (
-                                <option key={c.isoCode} value={c.name}>{c.name}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{isRTL ? "المدينة" : "City"} *</label>
-                        <select
-                            required
-                            disabled={!form.country}
-                            value={form.city}
-                            onChange={(e) => setForm({ ...form, city: e.target.value })}
-                            className="input-field disabled:opacity-50"
-                        >
-                            <option value="">{isRTL ? "اختر المدينة" : "Select City"}</option>
-                            {cities.map((c) => (
-                                <option key={c.name} value={c.name}>{c.name}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{t.unit.district}</label>
-                        <input
-                            type="text"
-                            value={form.district}
-                            onChange={(e) => setForm({ ...form, district: e.target.value })}
-                            placeholder={isRTL ? "مثال: المعادي" : "e.g. Maadi"}
-                            className="input-field"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">{t.unit.address}</label>
-                        <input
-                            type="text"
-                            value={form.address}
-                            onChange={(e) => setForm({ ...form, address: e.target.value })}
-                            placeholder={isRTL ? "عنوان الشارع" : "Street address"}
-                            className="input-field"
-                        />
-                    </div>
-                </div>
-            </div>
+
 
             <button
                 type="submit"

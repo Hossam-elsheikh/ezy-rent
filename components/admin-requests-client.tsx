@@ -2,7 +2,7 @@
 
 import { useLanguage } from "@/context/language-context";
 import { Navbar } from "@/components/navbar";
-import { formatPrice, formatDate } from "@/lib/helpers";
+import { formatPrice, formatDate, getCountryName, getCountryCurrency } from "@/lib/helpers";
 import { UserProfile } from "@/lib/types";
 import Link from "next/link";
 import { ClipboardList, Clock, CheckCircle, XCircle } from "lucide-react";
@@ -14,7 +14,7 @@ interface AdminRequestsClientProps {
 }
 
 export function AdminRequestsClient({ user, requests, status }: AdminRequestsClientProps) {
-    const { t, isRTL } = useLanguage();
+    const { t, isRTL, language } = useLanguage();
 
     const statusBadge: Record<string, string> = {
         pending: "badge-pending",
@@ -87,10 +87,10 @@ export function AdminRequestsClient({ user, requests, status }: AdminRequestsCli
                                             </p>
                                         </td>
                                         <td className="px-5 py-4 text-gray-600 dark:text-gray-400 text-xs">
-                                            {[req.city, req.country].filter(Boolean).join(", ")}
+                                            {[req.city, getCountryName(req.country, language)].filter(Boolean).join(", ")}
                                         </td>
                                         <td className="px-5 py-4 font-medium text-gray-900 dark:text-white">
-                                            {formatPrice(req.price)}
+                                            {formatPrice(req.price, language, req.currency || getCountryCurrency(req.country))}
                                         </td>
                                         <td className="px-5 py-4">
                                             <span className={statusBadge[req.status]}>

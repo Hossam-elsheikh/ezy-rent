@@ -5,7 +5,7 @@ import { Globe, Languages } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 export function LanguageSwitcher() {
-    const { language, setLanguage } = useLanguage();
+    const { language, setLanguage, isRTL } = useLanguage();
     const [open, setOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +35,7 @@ export function LanguageSwitcher() {
             </button>
 
             {open && (
-                <div className="absolute right-0 top-full mt-2 w-36 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 py-2 z-[60] animate-fade-in-up">
+                <div className={`absolute ${isRTL ? 'left-0' : 'right-0'} top-full mt-2 w-36 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 py-2 z-[60] animate-fade-in-up`}>
                     {languages.map((lang) => (
                         <button
                             key={lang.code}
@@ -44,8 +44,8 @@ export function LanguageSwitcher() {
                                 setOpen(false);
                             }}
                             className={`flex items-center justify-between w-full px-4 py-2 text-sm transition-colors ${language === lang.code
-                                    ? "text-teal-600 dark:text-teal-400 font-bold bg-teal-50 dark:bg-teal-900/20"
-                                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                ? "text-teal-600 dark:text-teal-400 font-bold bg-teal-50 dark:bg-teal-900/20"
+                                : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                                 }`}
                         >
                             <span>{lang.label}</span>

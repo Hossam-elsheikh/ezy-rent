@@ -4,6 +4,8 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Shield, User, Loader2 } from "lucide-react";
+import { useLanguage } from "@/context/language-context";
+import Swal from "sweetalert2";
 
 interface ChangeRoleButtonProps {
     userId: string;
@@ -14,11 +16,23 @@ interface ChangeRoleButtonProps {
 export function ChangeRoleButton({ userId, currentRole, isSelf }: ChangeRoleButtonProps) {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { t } = useLanguage();
 
     const toggle = async () => {
         if (isSelf) return;
         const newRole = currentRole === "admin" ? "user" : "admin";
-        if (!confirm(`Change this user's role to ${newRole}?`)) return;
+
+        const result = await Swal.fire({
+            title: t.admin.alerts.change_role_title,
+            text: `${t.admin.alerts.change_role_desc} ${newRole}?`,
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#4f46e5",
+            cancelButtonColor: "#6b7280",
+            confirmButtonText: t.admin.alerts.yes_change,
+            cancelButtonText: t.admin.alerts.cancel
+        });
+        if (!result.isConfirmed) return;
         setLoading(true);
         const supabase = createClient();
         await supabase.from("users").update({ role: newRole }).eq("id", userId);

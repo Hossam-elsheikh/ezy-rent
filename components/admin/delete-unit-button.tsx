@@ -4,13 +4,26 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2 } from "lucide-react";
+import { useLanguage } from "@/context/language-context";
+import Swal from "sweetalert2";
 
 export function DeleteUnitButton({ unitId }: { unitId: string }) {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { t } = useLanguage();
 
     const handleDelete = async () => {
-        if (!confirm("Are you sure you want to delete this unit? This action cannot be undone.")) return;
+        const result = await Swal.fire({
+            title: t.admin.alerts.delete_unit_title,
+            text: t.admin.alerts.delete_unit_desc,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#ef4444",
+            cancelButtonColor: "#6b7280",
+            confirmButtonText: t.admin.alerts.yes_delete_unit,
+            cancelButtonText: t.admin.alerts.cancel
+        });
+        if (!result.isConfirmed) return;
         setLoading(true);
         const supabase = createClient();
         await supabase.from("units").delete().eq("id", unitId);

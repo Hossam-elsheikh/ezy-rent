@@ -2,6 +2,7 @@
 
 import { useLanguage } from "@/context/language-context";
 import { Navbar } from "@/components/navbar";
+import { getCountryName } from "@/lib/helpers";
 import { UserProfile } from "@/lib/types";
 import Link from "next/link";
 import { Building2, Users, ClipboardList, CheckCircle, Clock, XCircle, ArrowRight } from "lucide-react";
@@ -19,7 +20,7 @@ interface AdminDashboardClientProps {
 }
 
 export function AdminDashboardClient({ user, stats, recentRequests }: AdminDashboardClientProps) {
-    const { t, isRTL } = useLanguage();
+    const { t, isRTL, language } = useLanguage();
 
     const statCards = [
         { label: t.admin.total_units, value: stats.totalUnits, icon: Building2, color: "teal", href: "/admin/units" },
@@ -116,7 +117,7 @@ export function AdminDashboardClient({ user, stats, recentRequests }: AdminDashb
                                     <div className={`min-w-0 ${isRTL ? 'text-right' : ''}`}>
                                         <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{req.title}</p>
                                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                                            {t.admin.by} {(req.requester as { full_name: string } | null)?.full_name || "Unknown"} · {req.city}, {req.country}
+                                            {t.admin.by} {(req.requester as { full_name: string } | null)?.full_name || "Unknown"} · {req.city}, {getCountryName(req.country, language)}
                                         </p>
                                     </div>
                                     <Link

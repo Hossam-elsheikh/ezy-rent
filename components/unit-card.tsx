@@ -1,7 +1,7 @@
 "use client";
 
 import { Unit } from "@/lib/types";
-import { formatPrice, formatDate, getImageUrl } from "@/lib/helpers";
+import { formatPrice, formatDate, getImageUrl, getCountryName, getCountryCurrency } from "@/lib/helpers";
 import { Heart, MapPin, Users, Calendar, BadgeCheck, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -125,14 +125,14 @@ export function UnitCard({ unit, isFavorited = false, isAdmin = false, showFavor
                         {unit.title}
                     </h3>
                     <div className={`${isRTL ? 'text-left' : 'text-right'} shrink-0`}>
-                        <p className="text-lg font-bold text-teal-600 dark:text-teal-400">{formatPrice(unit.price, language)}</p>
+                        <p className="text-lg font-bold text-teal-600 dark:text-teal-400">{formatPrice(unit.price, language, unit.currency || getCountryCurrency(unit.country))}</p>
                         <p className="text-xs text-gray-400">{t.unit.per_month}</p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-xs mb-3">
                     <MapPin size={12} />
-                    <span className="truncate">{[unit.district, unit.city, unit.country].filter(Boolean).join(", ")}</span>
+                    <span className="truncate">{[unit.district, unit.city, getCountryName(unit.country, language)].filter(Boolean).join(", ")}</span>
                 </div>
 
                 <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-800 pt-3">

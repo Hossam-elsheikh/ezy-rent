@@ -25,10 +25,11 @@ export interface Unit {
     persons: number;
     price: number;
     negotiable: boolean;
-    country: string;
+    country: string;        // ISO 3166-1 alpha-2 code, e.g. "EG"
     city: string;
     district: string | null;
     address: string | null;
+    currency: string | null; // ISO 4217 code, e.g. "EGP"
     available: boolean;
     available_at: string | null;
     status: "pending" | "approved" | "rejected";
@@ -47,10 +48,11 @@ export interface UnitRequest {
     persons: number;
     price: number;
     negotiable: boolean;
-    country: string;
+    country: string;        // ISO 3166-1 alpha-2 code, e.g. "EG"
     city: string;
     district: string | null;
     address: string | null;
+    currency: string | null; // ISO 4217 code, e.g. "EGP"
     available_at: string | null;
     status: "pending" | "approved" | "rejected";
     admin_note: string | null;
